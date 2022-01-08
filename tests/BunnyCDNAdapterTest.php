@@ -13,6 +13,10 @@ class BunnyCDNAdapterTest extends TestCase
 
     private function getBunnyCDNAdapter(): BunnyCDNAdapter
     {
+        if (!isset($_SERVER['STORAGENAME'], $_SERVER['APIKEY'])) {
+            throw new RuntimeException('Running test without real data is currently not possible');
+        }
+
         return new BunnyCDNAdapter($_SERVER['STORAGENAME'], $_SERVER['APIKEY'], 'storage.bunnycdn.com', $this->subfolder);
     }
 
