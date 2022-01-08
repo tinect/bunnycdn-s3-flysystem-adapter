@@ -12,6 +12,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: php-actions/composer@v5
+        with:
+          php_version: 7.4
+          php_extensions: ext-pcov
       - uses: php-actions/phpunit@v3
         with:
           php_version: 7.4
