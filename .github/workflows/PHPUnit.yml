@@ -18,3 +18,4 @@ jobs:
           APIKEY: ${{ secrets.APIKEY }}
         with:
           php_version: 8.0
+          php_extensions: pcov
