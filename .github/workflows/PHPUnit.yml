@@ -17,5 +17,5 @@ jobs:
           STORAGENAME: ${{ secrets.STORAGENAME }}
           APIKEY: ${{ secrets.APIKEY }}
         with:
-          php_version: 8.0
-          php_extensions: pcov
+          php_version: 7.4
+          php_extensions: ext-pcov
