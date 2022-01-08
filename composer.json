@@ -4,8 +4,7 @@
     "license": "MIT",
     "authors": [
         {
-            "name": "Alex Sinnott",
-            "email": "alex@platformapp.io"
+            "name": "tinect"
         }
     ],
     "require": {
@@ -22,11 +21,6 @@
     "autoload": {
         "psr-4": {
             "Tinect\\Flysystem\\BunnyCDN\\": "src/"
-        }
-    },
-    "extra": {
-        "branch-alias": {
-            "dev-master": "1.0-dev"
         }
     }
 }
