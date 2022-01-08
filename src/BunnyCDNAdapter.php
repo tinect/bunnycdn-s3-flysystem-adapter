@@ -18,7 +18,7 @@ class BunnyCDNAdapter extends AwsS3Adapter
             $subfolder = rtrim($subfolder, '/') .  '/';
         }
 
-        if (strpos('http', $endpoint) !== 0) {
+        if (strpos($endpoint, 'http') !== 0) {
             $endpoint = 'https://' . $endpoint;
         }
 

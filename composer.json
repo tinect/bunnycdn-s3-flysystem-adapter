@@ -8,7 +8,7 @@
         }
     ],
     "require": {
-        "php": ">=7.0.0",
+        "php": ">=7.4",
         "league/flysystem": "~1.0",
         "ext-json": "*",
         "league/flysystem-aws-s3-v3": "^1.0"
