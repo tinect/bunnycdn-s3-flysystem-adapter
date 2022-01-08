@@ -13,9 +13,9 @@ jobs:
       - uses: actions/checkout@v2
       - uses: php-actions/composer@v5
       - uses: php-actions/phpunit@v3
-        env:
-          STORAGENAME: ${{ secrets.STORAGENAME }}
-          APIKEY: ${{ secrets.APIKEY }}
         with:
           php_version: 7.4
           php_extensions: ext-pcov
+        env:
+          STORAGENAME: ${{ secrets.STORAGENAME }}
+          APIKEY: ${{ secrets.APIKEY }}
