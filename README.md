@@ -3,7 +3,7 @@
 ## Installation
 
 ```bash
-composer require tinect/flysystem-bunnycdn
+composer require tinect/bunnycdn-s3-flysystem-adapter
 ```
 
 ## Usage
