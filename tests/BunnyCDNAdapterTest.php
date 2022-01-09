@@ -2,6 +2,7 @@
 
 use League\Flysystem\Config;
 use League\Flysystem\Filesystem;
+use League\Flysystem\FilesystemAdapter;
 use PHPUnit\Framework\TestCase;
 use Tinect\Flysystem\BunnyCDN\BunnyCDNAdapter;
 
@@ -9,20 +10,35 @@ class BunnyCDNAdapterTest extends TestCase
 {
     const TEST_FILE_CONTENTS = 'testing1982';
 
-    private $subfolder = 'teeeeeest';
+    public static function setUpBeforeClass(): void
+    {
+        if (!isset($_SERVER['subfolder'])) {
+            $_SERVER['subfolder'] = 'test' . bin2hex(random_bytes(10));
+        }
+    }
 
-    private function getBunnyCDNAdapter(): BunnyCDNAdapter
+    public static function tearDownAfterClass(): void
+    {
+        self::createFilesystemAdapter()->delete('../' . $_SERVER['subfolder']  . '/');
+    }
+
+    private function adapter(): BunnyCDNAdapter
+    {
+        return self::createFilesystemAdapter();
+    }
+
+    protected static function createFilesystemAdapter(): BunnyCDNAdapter
     {
         if (!isset($_SERVER['STORAGENAME'], $_SERVER['APIKEY'])) {
             throw new RuntimeException('Running test without real data is currently not possible');
         }
 
-        return new BunnyCDNAdapter($_SERVER['STORAGENAME'], $_SERVER['APIKEY'], 'storage.bunnycdn.com', $this->subfolder);
+        return new BunnyCDNAdapter($_SERVER['STORAGENAME'], $_SERVER['APIKEY'], 'storage.bunnycdn.com', $_SERVER['subfolder']);
     }
 
     public function testFileProcesses()
     {
-        $adapter = $this->getBunnyCDNAdapter();
+        $adapter = $this->adapter();
 
         self::assertFalse(
             $adapter->has('testing/test.txt')
@@ -55,7 +71,7 @@ class BunnyCDNAdapterTest extends TestCase
      */
     public function testWriteStream()
     {
-        $adapter = $this->getBunnyCDNAdapter();
+        $adapter = $this->adapter();
 
         $fileName = 'testing/testStream.txt';
 
@@ -77,7 +93,7 @@ class BunnyCDNAdapterTest extends TestCase
      */
     public function testReadStream()
     {
-        $adapter = $this->getBunnyCDNAdapter();
+        $adapter = $this->adapter();
 
         $fileName = 'testing/testStream.txt';
 
@@ -106,7 +122,7 @@ class BunnyCDNAdapterTest extends TestCase
      */
     public function testCopy()
     {
-        $adapter = $this->getBunnyCDNAdapter();
+        $adapter = $this->adapter();
 
         self::assertIsArray(
             $adapter->write('testing/test.txt', self::TEST_FILE_CONTENTS, new Config())
@@ -140,7 +156,7 @@ class BunnyCDNAdapterTest extends TestCase
      */
     public function testListContents()
     {
-        $adapter = $this->getBunnyCDNAdapter();
+        $adapter = $this->adapter();
         self::assertIsArray(
             $adapter->listContents('/')
         );
@@ -154,7 +170,7 @@ class BunnyCDNAdapterTest extends TestCase
      */
     public function testGetSize()
     {
-        $adapter = $this->getBunnyCDNAdapter();
+        $adapter = $this->adapter();
 
         self::assertIsArray(
             $adapter->write('testing/test.txt', self::TEST_FILE_CONTENTS, new Config())
@@ -174,7 +190,7 @@ class BunnyCDNAdapterTest extends TestCase
      */
     public function testGetTimestamp()
     {
-        $adapter = $this->getBunnyCDNAdapter();
+        $adapter = $this->adapter();
 
         self::assertIsArray(
             $adapter->write('testing/test.txt', self::TEST_FILE_CONTENTS, new Config())
@@ -194,7 +210,7 @@ class BunnyCDNAdapterTest extends TestCase
      */
     public function testRename()
     {
-        $adapter = $this->getBunnyCDNAdapter();
+        $adapter = $this->adapter();
 
         self::assertIsArray(
             $adapter->write('testing/test.txt', self::TEST_FILE_CONTENTS, new Config())
@@ -222,7 +238,7 @@ class BunnyCDNAdapterTest extends TestCase
      */
     public function testUpdate()
     {
-        $adapter = $this->getBunnyCDNAdapter();
+        $adapter = $this->adapter();
 
         self::assertIsArray(
             $adapter->write('testing/test.txt', self::TEST_FILE_CONTENTS, new Config())
@@ -243,7 +259,7 @@ class BunnyCDNAdapterTest extends TestCase
      */
     public function testUpdateStream()
     {
-        $adapter = $this->getBunnyCDNAdapter();
+        $adapter = $this->adapter();
 
         self::assertIsArray(
             $adapter->write('testing/test.txt', self::TEST_FILE_CONTENTS, new Config())
@@ -268,7 +284,7 @@ class BunnyCDNAdapterTest extends TestCase
      */
     public function testCreateDir()
     {
-        $adapter = $this->getBunnyCDNAdapter();
+        $adapter = $this->adapter();
         self::assertIsArray(
             $adapter->createDir('testing_created/', new Config())
         );
@@ -283,7 +299,7 @@ class BunnyCDNAdapterTest extends TestCase
      */
     public function testTestsFlysystemCompatibility()
     {
-        $adapter = $this->getBunnyCDNAdapter();
+        $adapter = $this->adapter();
         $filesystem = new Filesystem($adapter);
         self::assertTrue($filesystem->createDir("test"));
         self::assertTrue($filesystem->deleteDir("test"));
@@ -294,7 +310,7 @@ class BunnyCDNAdapterTest extends TestCase
      */
     public function testDelete()
     {
-        $adapter = $this->getBunnyCDNAdapter();
+        $adapter = $this->adapter();
         self::assertIsArray($adapter->write('testing/test.txt', self::TEST_FILE_CONTENTS, new Config()));
         self::assertTrue($adapter->delete('testing/test.txt'));
         self::assertFalse($adapter->delete('testing/test.txtaaaaaa'));
@@ -305,7 +321,7 @@ class BunnyCDNAdapterTest extends TestCase
      */
     public function testDeleteDir()
     {
-        $adapter = $this->getBunnyCDNAdapter();
+        $adapter = $this->adapter();
         self::assertIsArray($adapter->createDir('testing_for_deletion/',  new Config()));
         self::assertTrue($adapter->deleteDir('testing_for_deletion/'));
         self::assertTrue($adapter->deleteDir('testing/'));
