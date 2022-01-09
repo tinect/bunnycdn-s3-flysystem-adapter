@@ -1,9 +1,9 @@
-# Flysystem Adapter for BunnyCDN Storage with S3
+# Flysystem2 Adapter for BunnyCDN Storage with S3
 
 ## Installation
 
 ```bash
-composer require tinect/bunnycdn-s3-flysystem-adapter
+composer require tinect/bunnycdn-s3-flysystem2-adapter
 ```
 
 ## Usage
