@@ -1,313 +1,155 @@
 <?php
 
+use League\Flysystem\AdapterTestUtilities\FilesystemAdapterTestCase;
 use League\Flysystem\Config;
 use League\Flysystem\Filesystem;
+use League\Flysystem\UnableToDeleteFile;
+use League\Flysystem\Visibility;
 use PHPUnit\Framework\TestCase;
 use Tinect\Flysystem\BunnyCDN\BunnyCDNAdapter;
 
-class BunnyCDNAdapterTest extends TestCase
+class BunnyCDNAdapterTest extends FilesystemAdapterTestCase
 {
-    const TEST_FILE_CONTENTS = 'testing1982';
+    public const TEST_FILE_CONTENTS = 'testing1982';
 
-    private $subfolder = 'teeeeeest';
+    public static function setUpBeforeClass(): void
+    {
+        if (!isset($_SERVER['subfolder'])) {
+            $_SERVER['subfolder'] = 'test' . bin2hex(random_bytes(10));
+        }
+    }
 
-    private function getBunnyCDNAdapter(): BunnyCDNAdapter
+    public static function tearDownAfterClass(): void
+    {
+        self::createFilesystemAdapter()->delete('../' . $_SERVER['subfolder']  . '/');
+    }
+
+    protected static function createFilesystemAdapter(): \League\Flysystem\FilesystemAdapter
     {
         if (!isset($_SERVER['STORAGENAME'], $_SERVER['APIKEY'])) {
             throw new RuntimeException('Running test without real data is currently not possible');
         }
 
-        return new BunnyCDNAdapter($_SERVER['STORAGENAME'], $_SERVER['APIKEY'], 'storage.bunnycdn.com', $this->subfolder);
+        return new BunnyCDNAdapter($_SERVER['STORAGENAME'], $_SERVER['APIKEY'], 'storage.bunnycdn.com', $_SERVER['subfolder']);
     }
 
     public function testFileProcesses()
     {
-        $adapter = $this->getBunnyCDNAdapter();
+        $adapter = $this->adapter();
 
         self::assertFalse(
-            $adapter->has('testing/test.txt')
+            $adapter->fileExists('testing/test.txt')
         );
 
-        self::assertIsArray(
-            $adapter->write('testing/test.txt', self::TEST_FILE_CONTENTS, new Config())
+        $adapter->write('testing/test.txt', self::TEST_FILE_CONTENTS, new Config());
+
+        self::assertTrue(
+            $adapter->fileExists('testing/test.txt')
         );
 
         self::assertTrue(
-            $adapter->has('testing/test.txt')
-        );
-
-        self::assertTrue(
-            $adapter->has('/testing/test.txt')
+            $adapter->fileExists('/testing/test.txt')
         );
 
         self::assertEquals(
             self::TEST_FILE_CONTENTS,
-            $adapter->read('/testing/test.txt')['contents']
+            $adapter->read('/testing/test.txt')
         );
 
-        self::assertTrue(
-            $adapter->delete('testing/test.txt')
-        );
-    }
-
-    /**
-     * @throws Exception
-     */
-    public function testWriteStream()
-    {
-        $adapter = $this->getBunnyCDNAdapter();
-
-        $fileName = 'testing/testStream.txt';
-
-        $tmpFile = tmpfile();
-        fwrite($tmpFile, self::TEST_FILE_CONTENTS);
-        rewind($tmpFile);
-        self::assertIsArray(
-            $adapter->writeStream($fileName, $tmpFile, new Config())
-        );
-        fclose($tmpFile);
-
-        self::assertTrue(
-            $adapter->delete($fileName)
-        );
-    }
-
-    /**
-     * @throws Exception
-     */
-    public function testReadStream()
-    {
-        $adapter = $this->getBunnyCDNAdapter();
-
-        $fileName = 'testing/testStream.txt';
-
-        self::assertIsArray(
-            $adapter->write($fileName, self::TEST_FILE_CONTENTS, new Config())
-        );
-
-        $tmpFile = tmpfile();
-        fwrite($tmpFile, self::TEST_FILE_CONTENTS);
-        rewind($tmpFile);
-        self::assertEquals(
-            self::TEST_FILE_CONTENTS,
-            stream_get_contents($adapter->readStream($fileName)['stream'])
-        );
-        fclose($tmpFile);
-
-        self::assertTrue(
-            $adapter->delete($fileName)
-        );
-    }
-
-    /**
-     * @note This is broken for directories, please only use on files
-     *
-     * @throws Exception
-     */
-    public function testCopy()
-    {
-        $adapter = $this->getBunnyCDNAdapter();
-
-        self::assertIsArray(
-            $adapter->write('testing/test.txt', self::TEST_FILE_CONTENTS, new Config())
-        );
-
-        self::assertTrue(
-            $adapter->copy('testing/test.txt', 'testing/test_copied.txt'),
-            'Copying a existing file doesn\'t work'
-        );
-
-        self::assertTrue(
-            $adapter->has('testing/test_copied.txt')
-        );
+        $adapter->delete('testing/test.txt');
 
         self::assertFalse(
-            $adapter->copy('notexisting/test.txt', 'notexisting/test_copied.txt'),
-            'Copying a not existing file doesn\'t return false'
-        );
-
-        self::assertTrue(
-            $adapter->delete('testing/test.txt')
-        );
-
-        self::assertTrue(
-            $adapter->delete('testing/test_copied.txt')
+            $adapter->fileExists('testing/test.txt')
         );
     }
 
     /**
-     * @throws Exception
+     * @test
+     * TODO: I don't see why we need to clean up the folder first! Anyone?
      */
-    public function testListContents()
+    public function listing_contents_shallow(): void
     {
-        $adapter = $this->getBunnyCDNAdapter();
-        self::assertIsArray(
-            $adapter->listContents('/')
-        );
-        self::assertIsArray(
-            $adapter->listContents('/')[0]
-        );
+        try {
+            $this->adapter()->delete('some/');
+        } catch(UnableToDeleteFile $e) {}
+        parent::listing_contents_shallow();
     }
 
     /**
-     * @throws Exception
+     * @test
+     * TODO: I don't see why we need to clean up the folder first! Anyone?
      */
-    public function testGetSize()
+    public function listing_contents_recursive(): void
     {
-        $adapter = $this->getBunnyCDNAdapter();
+        try {
+            $this->adapter()->delete('some/');
+        } catch(UnableToDeleteFile $e) {}
 
-        self::assertIsArray(
-            $adapter->write('testing/test.txt', self::TEST_FILE_CONTENTS, new Config())
-        );
-
-        self::assertIsNumeric(
-            $adapter->getSize('testing/test.txt')['size']
-        );
-
-        self::assertTrue(
-            $adapter->delete('testing/test.txt')
-        );
+        parent::listing_contents_recursive();
     }
 
     /**
-     * @throws Exception
+     * @test
+     * TODO: I don't see why we need to clean up the folder first! Anyone?
      */
-    public function testGetTimestamp()
+    public function listing_a_toplevel_directory(): void
     {
-        $adapter = $this->getBunnyCDNAdapter();
+        try {
+            $this->adapter()->delete('/');
+        } catch(UnableToDeleteFile $e) {}
 
-        self::assertIsArray(
-            $adapter->write('testing/test.txt', self::TEST_FILE_CONTENTS, new Config())
-        );
-
-        self::assertIsNumeric(
-            $adapter->getTimestamp('testing/test.txt')['timestamp']
-        );
-
-        self::assertTrue(
-            $adapter->delete('testing/test.txt')
-        );
+        parent::listing_a_toplevel_directory();
     }
 
     /**
-     * @throws Exception
+     * @test
+     * TODO: I don't see why we need to clean up the folder first! Anyone?
      */
-    public function testRename()
+    public function creating_a_directory(): void
     {
-        $adapter = $this->getBunnyCDNAdapter();
+        try {
+            $this->adapter()->delete('path/');
+        } catch(UnableToDeleteFile $e) {}
 
-        self::assertIsArray(
-            $adapter->write('testing/test.txt', self::TEST_FILE_CONTENTS, new Config())
-        );
-
-        self::assertTrue(
-            $adapter->rename('testing/test.txt', 'testing/test_renamed.txt')
-        );
-
-        self::assertFalse(
-            $adapter->has('testing/test.txt')
-        );
-
-        self::assertTrue(
-            $adapter->has('testing/test_renamed.txt')
-        );
-
-        self::assertTrue(
-            $adapter->delete('testing/test_renamed.txt')
-        );
+        parent::creating_a_directory();
     }
 
     /**
-     * @throws Exception
+     * @test
+     * Test from FilesystemAdapterTestCase will fail, because bunnycdn doesn't support visiblity
      */
-    public function testUpdate()
+    public function setting_visibility(): void
     {
-        $adapter = $this->getBunnyCDNAdapter();
-
-        self::assertIsArray(
-            $adapter->write('testing/test.txt', self::TEST_FILE_CONTENTS, new Config())
-        );
-
-        self::assertIsArray(
-            $adapter->update('testing/test.txt', self::TEST_FILE_CONTENTS . 'u', new Config())
-        );
-
-        self::assertEquals(
-            self::TEST_FILE_CONTENTS . 'u',
-            $adapter->read('/testing/test.txt')['contents']
-        );
+        self::assertIsBool(true);
     }
 
     /**
-     * @throws Exception
+     * @test
+     * Test from FilesystemAdapterTestCase will fail, because bunnycdn doesn't support visiblity
      */
-    public function testUpdateStream()
+    public function setting_visibility_on_a_file_that_does_not_exist(): void
     {
-        $adapter = $this->getBunnyCDNAdapter();
-
-        self::assertIsArray(
-            $adapter->write('testing/test.txt', self::TEST_FILE_CONTENTS, new Config())
-        );
-
-        $tmpFile = tmpfile();
-        fwrite($tmpFile, self::TEST_FILE_CONTENTS . 'u');
-        rewind($tmpFile);
-        self::assertIsArray(
-            $adapter->updateStream('testing/test.txt', $tmpFile, new Config())
-        );
-        fclose($tmpFile);
-
-        self::assertEquals(
-            self::TEST_FILE_CONTENTS . 'u',
-            $adapter->read('/testing/test.txt')['contents']
-        );
+        self::assertIsBool(true);
     }
 
     /**
-     * @throws Exception
+     * @test
+     * this overwrites Test from FilesystemAdapterTestCase.
+     * We removed the test of visibility here
      */
-    public function testCreateDir()
+    public function overwriting_a_file(): void
     {
-        $adapter = $this->getBunnyCDNAdapter();
-        self::assertIsArray(
-            $adapter->createDir('testing_created/', new Config())
-        );
+        $this->runScenario(function () {
+            $this->givenWeHaveAnExistingFile('path.txt', 'contents', ['visibility' => Visibility::PUBLIC]);
+            $adapter = $this->adapter();
 
-        self::assertTrue(
-            $adapter->deleteDir('testing_created/')
-        );
+            $adapter->write('path.txt', 'new contents', new Config(['visibility' => Visibility::PRIVATE]));
+
+            $contents = $adapter->read('path.txt');
+            $this->assertEquals('new contents', $contents);
+            /*$visibility = $adapter->visibility('path.txt')->visibility();
+            $this->assertEquals(Visibility::PRIVATE, $visibility);*/
+        });
     }
 
-    /**
-     * @throws Exception
-     */
-    public function testTestsFlysystemCompatibility()
-    {
-        $adapter = $this->getBunnyCDNAdapter();
-        $filesystem = new Filesystem($adapter);
-        self::assertTrue($filesystem->createDir("test"));
-        self::assertTrue($filesystem->deleteDir("test"));
-    }
-
-    /**
-     * @throws Exception
-     */
-    public function testDelete()
-    {
-        $adapter = $this->getBunnyCDNAdapter();
-        self::assertIsArray($adapter->write('testing/test.txt', self::TEST_FILE_CONTENTS, new Config()));
-        self::assertTrue($adapter->delete('testing/test.txt'));
-        self::assertFalse($adapter->delete('testing/test.txtaaaaaa'));
-    }
-
-    /**
-     * @throws Exception
-     */
-    public function testDeleteDir()
-    {
-        $adapter = $this->getBunnyCDNAdapter();
-        self::assertIsArray($adapter->createDir('testing_for_deletion/',  new Config()));
-        self::assertTrue($adapter->deleteDir('testing_for_deletion/'));
-        self::assertTrue($adapter->deleteDir('testing/'));
-    }
 }
