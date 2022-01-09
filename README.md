@@ -1,6 +1,7 @@
 # Flysystem2 Adapter for BunnyCDN Storage with S3
 
-This adapter supports Flysystem with version 2 for BunnyCDN.
+This adapter supports Flysystem with version 2 for BunnyCDN.  
+There is a dedicated repository for [Flysystem 1 support](https://github.com/tinect/bunnycdn-s3-flysystem-adapter)
 
 ## Installation
 
