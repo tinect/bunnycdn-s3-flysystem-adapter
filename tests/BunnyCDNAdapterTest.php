@@ -2,21 +2,17 @@
 
 use League\Flysystem\AdapterTestUtilities\FilesystemAdapterTestCase;
 use League\Flysystem\Config;
-use League\Flysystem\Filesystem;
 use League\Flysystem\UnableToDeleteFile;
 use League\Flysystem\Visibility;
-use PHPUnit\Framework\TestCase;
 use Tinect\Flysystem\BunnyCDN\BunnyCDNAdapter;
 
 class BunnyCDNAdapterTest extends FilesystemAdapterTestCase
 {
-    public const TEST_FILE_CONTENTS = 'testing1982';
+    private const TEST_FILE_CONTENTS = 'testing1982';
 
     public static function setUpBeforeClass(): void
     {
-        if (!isset($_SERVER['subfolder'])) {
-            $_SERVER['subfolder'] = 'test' . bin2hex(random_bytes(10));
-        }
+        $_SERVER['subfolder'] = 'test' . bin2hex(random_bytes(10));
     }
 
     public static function tearDownAfterClass(): void
@@ -24,7 +20,7 @@ class BunnyCDNAdapterTest extends FilesystemAdapterTestCase
         self::createFilesystemAdapter()->delete('../' . $_SERVER['subfolder']  . '/');
     }
 
-    protected static function createFilesystemAdapter(): \League\Flysystem\FilesystemAdapter
+    protected static function createFilesystemAdapter(): BunnyCDNAdapter
     {
         if (!isset($_SERVER['STORAGENAME'], $_SERVER['APIKEY'])) {
             throw new RuntimeException('Running test without real data is currently not possible');

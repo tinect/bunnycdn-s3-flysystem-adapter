@@ -1,9 +1,11 @@
-<?php declare(strict_types=1);
+<?php
+declare(strict_types=1);
 
 namespace Tinect\Flysystem\BunnyCDN;
 
-use Aws\S3\Exception\S3Exception;
-use League\Flysystem\AwsS3V3\AwsS3V3Adapter;
+use AsyncAws\Core\Configuration;
+use AsyncAws\S3\S3Client;
+use League\Flysystem\AsyncAwsS3\AsyncAwsS3Adapter;
 use League\Flysystem\Config;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\StorageAttributes;
@@ -14,11 +16,11 @@ use League\Flysystem\UnableToSetVisibility;
 use League\Flysystem\Visibility;
 use League\MimeTypeDetection\ExtensionMimeTypeDetector;
 use League\MimeTypeDetection\FinfoMimeTypeDetector;
-use League\MimeTypeDetection\MimeTypeDetector;
 
-class BunnyCDNAdapter extends AwsS3V3Adapter
+class BunnyCDNAdapter extends AsyncAwsS3Adapter
 {
     /**
+     * This is used in tests. Don't remove it!
      * @var string[]
      */
     public const EXTRA_METADATA_FIELDS = [
@@ -39,15 +41,12 @@ class BunnyCDNAdapter extends AwsS3V3Adapter
         }
 
         $s3client = new S3Client([
-            'version' => 'latest',
-            'region'  => '',
-            'endpoint' => rtrim($endpoint, '/') . '/',
-            'use_path_style_endpoint' => true,
-            'signature_version' => 'v4',
-            'credentials' => [
-                'key'    => $storageName,
-                'secret' => $apiKey,
-            ],
+            Configuration::OPTION_REGION  => '',
+            Configuration::OPTION_ENDPOINT => rtrim($endpoint, '/'),
+            Configuration::OPTION_SEND_CHUNKED_BODY => false,
+            Configuration::OPTION_ACCESS_KEY_ID => $storageName,
+            Configuration::OPTION_SECRET_ACCESS_KEY => $apiKey,
+            Configuration::OPTION_PATH_STYLE_ENDPOINT => true
         ]);
 
         parent::__construct($s3client, $storageName, $subfolder);
