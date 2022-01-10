@@ -2,19 +2,16 @@
 
 use League\Flysystem\Config;
 use League\Flysystem\Filesystem;
-use League\Flysystem\FilesystemAdapter;
 use PHPUnit\Framework\TestCase;
 use Tinect\Flysystem\BunnyCDN\BunnyCDNAdapter;
 
 class BunnyCDNAdapterTest extends TestCase
 {
-    const TEST_FILE_CONTENTS = 'testing1982';
+    private const TEST_FILE_CONTENTS = 'testing1982';
 
     public static function setUpBeforeClass(): void
     {
-        if (!isset($_SERVER['subfolder'])) {
-            $_SERVER['subfolder'] = 'test' . bin2hex(random_bytes(10));
-        }
+        $_SERVER['subfolder'] = 'test' . bin2hex(random_bytes(10));
     }
 
     public static function tearDownAfterClass(): void
