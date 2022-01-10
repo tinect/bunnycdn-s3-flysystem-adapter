@@ -2,15 +2,15 @@
 
 namespace Tinect\Flysystem\BunnyCDN;
 
-use Aws\S3\Exception\S3Exception;
+use AsyncAws\Core\Configuration;
+use AsyncAws\Flysystem\S3\AsyncAwsS3Adapter;
+use AsyncAws\S3\S3Client;
 use League\Flysystem\Adapter\Polyfill\NotSupportingVisibilityTrait;
-use League\Flysystem\Adapter\Polyfill\StreamedCopyTrait;
-use League\Flysystem\AwsS3v3\AwsS3Adapter;
+use League\Flysystem\Config;
 
-class BunnyCDNAdapter extends AwsS3Adapter
+class BunnyCDNAdapter extends AsyncAwsS3Adapter
 {
     use NotSupportingVisibilityTrait;
-    use StreamedCopyTrait;
 
     public function __construct($storageName, $apiKey, $endpoint, $subfolder = '')
     {
@@ -23,18 +23,25 @@ class BunnyCDNAdapter extends AwsS3Adapter
         }
 
         $s3client = new S3Client([
-            'version' => 'latest',
-            'region'  => '',
-            'endpoint' => rtrim($endpoint, '/') . '/',
-            'use_path_style_endpoint' => true,
-            'signature_version' => 'v4',
-            'credentials' => [
-                'key'    => $storageName,
-                'secret' => $apiKey,
-            ],
+            Configuration::OPTION_REGION  => '',
+            Configuration::OPTION_ENDPOINT => rtrim($endpoint, '/'),
+            Configuration::OPTION_SEND_CHUNKED_BODY => false,
+            Configuration::OPTION_ACCESS_KEY_ID => $storageName,
+            Configuration::OPTION_SECRET_ACCESS_KEY => $apiKey,
+            Configuration::OPTION_PATH_STYLE_ENDPOINT => true
         ]);
 
         parent::__construct($s3client, $storageName, $subfolder);
+    }
+
+    public function copy($path, $newpath): bool
+    {
+        if ($content = $this->read($path)) {
+            $this->write($newpath, $content['contents'], new Config());
+            return true;
+        }
+
+        return false;
     }
 
     /*
@@ -44,12 +51,8 @@ class BunnyCDNAdapter extends AwsS3Adapter
     {
         try {
             return parent::delete($path);
-        } catch (S3Exception $e) {
-            if ($e->getStatusCode() === 404) {
-                return false;
-            }
-
-            throw $e;
+        } catch (\Exception $e) {
+            return false;
         }
     }
 
