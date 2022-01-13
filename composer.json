@@ -1,5 +1,5 @@
 {
-    "name": "tinect/bunnycdn-s3-flysystem2-adapter",
+    "name": "tinect/bunnycdn-s3-flysystem-adapter",
     "description": "Flysystem adapter for BunnyCDN",
     "license": "MIT",
     "authors": [

@@ -3,7 +3,7 @@ name: PHPUnit
 on:
   push:
     branches:
-      - main
+      - v2
   schedule:
     - cron: '30 12,18 * * *'
 
