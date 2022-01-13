@@ -1,26 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit
-         backupGlobals="false"
-         backupStaticAttributes="false"
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.3/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
          colors="true"
-         processIsolation="false"
          stopOnFailure="true"
          verbose="true"
-         bootstrap="tests/bootstrap.php"
 >
     <testsuites>
-        <testsuite name="tests">
-            <directory suffix=".php">./tests/</directory>
+        <testsuite name="BunnyCDN Flysystem Test Suite">
+            <directory>tests/</directory>
         </testsuite>
     </testsuites>
-    <filter>
-        <whitelist>
-            <directory suffix=".php">./src/</directory>
-        </whitelist>
-    </filter>
-
-    <logging>
-        <log type="coverage-html" target="./report" lowUpperBound="50" highLowerBound="80" />
-        <log type="coverage-clover" target="./clover.xml"/>
-    </logging>
+    <coverage processUncoveredFiles="true">
+        <include>
+            <directory>src/</directory>
+        </include>
+        <exclude>
+            <directory suffix="Tests.php">tests/</directory>
+        </exclude>
+    </coverage>
 </phpunit>
