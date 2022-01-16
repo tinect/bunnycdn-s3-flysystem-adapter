@@ -17,16 +17,20 @@ class BunnyCDNAdapterTest extends FilesystemAdapterTestCase
 
     public static function tearDownAfterClass(): void
     {
-        self::createFilesystemAdapter()->delete('../' . $_SERVER['subfolder']  . '/');
+        self::createFilesystemAdapter('')->deleteDir($_SERVER['subfolder']);
     }
 
-    protected static function createFilesystemAdapter(): BunnyCDNAdapter
+    protected static function createFilesystemAdapter(?string $subfolder = null): BunnyCDNAdapter
     {
         if (!isset($_SERVER['STORAGENAME'], $_SERVER['APIKEY'])) {
             throw new RuntimeException('Running test without real data is currently not possible');
         }
 
-        return new BunnyCDNAdapter($_SERVER['STORAGENAME'], $_SERVER['APIKEY'], 'storage.bunnycdn.com', $_SERVER['subfolder']);
+        if ($subfolder === null) {
+            $subfolder = $_SERVER['subfolder'];
+        }
+
+        return new BunnyCDNAdapter($_SERVER['STORAGENAME'], $_SERVER['APIKEY'], 'storage.bunnycdn.com', $subfolder);
     }
 
     public function testFileProcesses()
