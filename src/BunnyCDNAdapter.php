@@ -21,6 +21,7 @@ class BunnyCDNAdapter extends AsyncAwsS3Adapter
 {
     /**
      * This is used in tests. Don't remove it!
+     *
      * @var string[]
      */
     public const EXTRA_METADATA_FIELDS = [
@@ -33,20 +34,20 @@ class BunnyCDNAdapter extends AsyncAwsS3Adapter
     public function __construct($storageName, $apiKey, $endpoint, $subfolder = '')
     {
         if ($subfolder !== '') {
-            $subfolder = rtrim($subfolder, '/') .  '/';
+            $subfolder = rtrim($subfolder, '/') . '/';
         }
 
-        if (strpos($endpoint, 'http') !== 0) {
+        if (!str_starts_with($endpoint, 'http')) {
             $endpoint = 'https://' . $endpoint;
         }
 
         $s3client = new S3Client([
-            Configuration::OPTION_REGION  => '',
+            Configuration::OPTION_REGION => '',
             Configuration::OPTION_ENDPOINT => rtrim($endpoint, '/'),
             Configuration::OPTION_SEND_CHUNKED_BODY => false,
             Configuration::OPTION_ACCESS_KEY_ID => $storageName,
             Configuration::OPTION_SECRET_ACCESS_KEY => $apiKey,
-            Configuration::OPTION_PATH_STYLE_ENDPOINT => true
+            Configuration::OPTION_PATH_STYLE_ENDPOINT => true,
         ]);
 
         parent::__construct($s3client, $storageName, $subfolder);
@@ -111,7 +112,7 @@ class BunnyCDNAdapter extends AsyncAwsS3Adapter
     public function lastModified(string $path): FileAttributes
     {
         $result = parent::lastModified($path)->jsonSerialize();
-        $result[StorageAttributes::ATTRIBUTE_LAST_MODIFIED] += 3600;
+        $result[StorageAttributes::ATTRIBUTE_LAST_MODIFIED] += 3601;
 
         return FileAttributes::fromArray($result);
     }
@@ -123,12 +124,27 @@ class BunnyCDNAdapter extends AsyncAwsS3Adapter
     {
         try {
             parent::delete($path);
-        } catch (UnableToDeleteFile $e) {
+        } catch (UnableToDeleteFile) {
         }
     }
 
-    public function deleteDir($path): void
+    public function deleteDirectory($path): void
     {
         $this->delete(rtrim($path, '/') . '/');
+    }
+
+    public function directoryExists($path): bool
+    {
+        $pathParts = explode('/', rtrim($path, '/'));
+
+        $path = $pathParts[array_key_last($pathParts)];
+        unset($pathParts[array_key_last($pathParts)]);
+
+        $directoryContent = iterator_to_array($this->listContents(implode('/', $pathParts), false));
+        $directoryContent = json_decode(json_encode($directoryContent));
+
+        return \count(array_filter($directoryContent, function ($a) use ($path) {
+            return $a->type === 'dir' && $a->path === $path;
+        })) > 0;
     }
 }

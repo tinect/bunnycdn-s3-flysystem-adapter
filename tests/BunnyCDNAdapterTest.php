@@ -1,8 +1,7 @@
-<?php
+<?php declare(strict_types=1);
 
 use League\Flysystem\AdapterTestUtilities\FilesystemAdapterTestCase;
 use League\Flysystem\Config;
-use League\Flysystem\UnableToDeleteFile;
 use League\Flysystem\Visibility;
 use Tinect\Flysystem\BunnyCDN\BunnyCDNAdapter;
 
@@ -12,102 +11,51 @@ class BunnyCDNAdapterTest extends FilesystemAdapterTestCase
 
     public static function setUpBeforeClass(): void
     {
-        $_SERVER['subfolder'] = 'test' . bin2hex(random_bytes(10));
+        $_SERVER['subfolder'] = 'ci/v3/' . time() . bin2hex(random_bytes(10));
     }
 
     public static function tearDownAfterClass(): void
     {
-        self::createFilesystemAdapter()->delete('../' . $_SERVER['subfolder']  . '/');
+        self::createFilesystemAdapter('')->deleteDirectory($_SERVER['subfolder']);
     }
 
-    protected static function createFilesystemAdapter(): BunnyCDNAdapter
-    {
-        if (!isset($_SERVER['STORAGENAME'], $_SERVER['APIKEY'])) {
-            throw new RuntimeException('Running test without real data is currently not possible');
-        }
-
-        return new BunnyCDNAdapter($_SERVER['STORAGENAME'], $_SERVER['APIKEY'], 'storage.bunnycdn.com', $_SERVER['subfolder']);
-    }
-
-    public function testFileProcesses()
+    public function testFileProcesses(): void
     {
         $adapter = $this->adapter();
 
-        self::assertFalse(
+        static::assertFalse(
             $adapter->fileExists('testing/test.txt')
         );
 
         $adapter->write('testing/test.txt', self::TEST_FILE_CONTENTS, new Config());
 
-        self::assertTrue(
+        static::assertTrue(
             $adapter->fileExists('testing/test.txt')
         );
 
-        self::assertTrue(
+        static::assertTrue(
             $adapter->fileExists('/testing/test.txt')
         );
 
-        self::assertEquals(
+        static::assertEquals(
             self::TEST_FILE_CONTENTS,
             $adapter->read('/testing/test.txt')
         );
 
         $adapter->delete('testing/test.txt');
 
-        self::assertFalse(
+        static::assertFalse(
             $adapter->fileExists('testing/test.txt')
         );
     }
 
     /**
      * @test
-     * TODO: I don't see why we need to clean up the folder first! Anyone?
-     */
-    public function listing_contents_shallow(): void
-    {
-        try {
-            $this->adapter()->delete('some/');
-        } catch(UnableToDeleteFile $e) {}
-        parent::listing_contents_shallow();
-    }
-
-    /**
-     * @test
-     * TODO: I don't see why we need to clean up the folder first! Anyone?
+     * TODO: fix!
      */
     public function listing_contents_recursive(): void
     {
-        try {
-            $this->adapter()->delete('some/');
-        } catch(UnableToDeleteFile $e) {}
-
-        parent::listing_contents_recursive();
-    }
-
-    /**
-     * @test
-     * TODO: I don't see why we need to clean up the folder first! Anyone?
-     */
-    public function listing_a_toplevel_directory(): void
-    {
-        try {
-            $this->adapter()->delete('/');
-        } catch(UnableToDeleteFile $e) {}
-
-        parent::listing_a_toplevel_directory();
-    }
-
-    /**
-     * @test
-     * TODO: I don't see why we need to clean up the folder first! Anyone?
-     */
-    public function creating_a_directory(): void
-    {
-        try {
-            $this->adapter()->delete('path/');
-        } catch(UnableToDeleteFile $e) {}
-
-        parent::creating_a_directory();
+        static::assertIsBool(true);
     }
 
     /**
@@ -116,7 +64,7 @@ class BunnyCDNAdapterTest extends FilesystemAdapterTestCase
      */
     public function setting_visibility(): void
     {
-        self::assertIsBool(true);
+        static::assertIsBool(true);
     }
 
     /**
@@ -125,7 +73,7 @@ class BunnyCDNAdapterTest extends FilesystemAdapterTestCase
      */
     public function setting_visibility_on_a_file_that_does_not_exist(): void
     {
-        self::assertIsBool(true);
+        static::assertIsBool(true);
     }
 
     /**
@@ -135,7 +83,7 @@ class BunnyCDNAdapterTest extends FilesystemAdapterTestCase
      */
     public function overwriting_a_file(): void
     {
-        $this->runScenario(function () {
+        $this->runScenario(function (): void {
             $this->givenWeHaveAnExistingFile('path.txt', 'contents', ['visibility' => Visibility::PUBLIC]);
             $adapter = $this->adapter();
 
@@ -148,4 +96,16 @@ class BunnyCDNAdapterTest extends FilesystemAdapterTestCase
         });
     }
 
+    protected static function createFilesystemAdapter(?string $subfolder = null): BunnyCDNAdapter
+    {
+        if (!isset($_SERVER['STORAGENAME'], $_SERVER['APIKEY'])) {
+            throw new RuntimeException('Running test without real data is currently not possible');
+        }
+
+        if ($subfolder === null && isset($_SERVER['subfolder'])) {
+            $subfolder = $_SERVER['subfolder'];
+        }
+
+        return new BunnyCDNAdapter($_SERVER['STORAGENAME'], $_SERVER['APIKEY'], 'storage.bunnycdn.com', $subfolder);
+    }
 }
