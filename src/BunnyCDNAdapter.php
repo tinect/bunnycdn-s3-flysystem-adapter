@@ -112,7 +112,7 @@ class BunnyCDNAdapter extends AsyncAwsS3Adapter
     public function lastModified(string $path): FileAttributes
     {
         $result = parent::lastModified($path)->jsonSerialize();
-        $result[StorageAttributes::ATTRIBUTE_LAST_MODIFIED] += 3601;
+        $result[StorageAttributes::ATTRIBUTE_LAST_MODIFIED] += 7200;
 
         return FileAttributes::fromArray($result);
     }
