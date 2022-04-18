@@ -19,6 +19,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          ref: v1
       - uses: php-actions/composer@v5
         with:
           php_version: ${{ matrix.php_version }}
@@ -38,6 +40,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          ref: v2
       - uses: php-actions/composer@v5
         with:
           php_version: ${{ matrix.php_version }}
@@ -57,6 +61,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          ref: v3
       - uses: php-actions/composer@v5
         with:
           php_version: ${{ matrix.php_version }}
