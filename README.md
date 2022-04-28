@@ -1,5 +1,7 @@
 # Flysystem2 Adapter for BunnyCDN Storage with S3
 
+[![Test V2](https://github.com/tinect/bunnycdn-s3-flysystem-adapter/actions/workflows/test_v2.yml/badge.svg)](https://github.com/tinect/bunnycdn-s3-flysystem-adapter/actions/workflows/test_v2.yml)
+
 This adapter supports Flysystem with version 2 for BunnyCDN.  
 
 ## Installation
