@@ -32,7 +32,7 @@ jobs:
 
       - name: Run unit and functional tests
         run: |
-          php bin/phpunit --stop-on-failure
+          php vendor/bin/phpunit --stop-on-failure
         env:
           STORAGENAME: ${{ secrets.STORAGENAME }}
           APIKEY: ${{ secrets.APIKEY }}
