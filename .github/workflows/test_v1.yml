@@ -1,0 +1,39 @@
+name: Test V1
+
+on:
+    push:
+        branches:
+            - v1
+    schedule:
+        - cron: '15 5 * * *'
+    workflow_dispatch:
+
+jobs:
+    test:
+        runs-on: ubuntu-latest
+
+        strategy:
+            matrix:
+                php_version: [ 8.1 ]
+
+        steps:
+            - uses: actions/checkout@v5
+              with:
+                  ref: v1
+
+            - name: Setup PHP
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: ${{ matrix.php_version }}
+                  tools: composer:v2
+                  coverage: none
+
+            - name: Run composer install
+              run: composer install -n --prefer-dist
+
+            - name: Run unit and functional tests
+              run: |
+                  php vendor/bin/phpunit --stop-on-failure
+              env:
+                  STORAGENAME: ${{ secrets.STORAGENAME }}
+                  APIKEY: ${{ secrets.APIKEY }}
